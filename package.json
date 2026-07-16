@@ -1,6 +1,6 @@
 {
     "name": "wargaming-mcp-server",
-    "version": "2.2.0",
+    "version": "2.3.0",
     "description": "MCP server for the Wargaming World of Tanks Console API: player stats, session/progress tracking, player & tank comparisons, clan reports, and the full Tankopedia",
     "type": "module",
     "main": "./build/index.js",
