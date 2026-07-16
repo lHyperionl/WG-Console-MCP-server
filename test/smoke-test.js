@@ -183,8 +183,10 @@ async function main() {
             );
 
             // Chain search -> report to exercise get-player-report end-to-end
+            // Nicknames may contain spaces (Xbox gamertags), so capture
+            // everything up to the ID marker.
             const nicknames = [
-                ...players.matchAll(/• (\S+) \(ID: \d+\)/g),
+                ...players.matchAll(/• (.+?) \(ID: \d+\)/g),
             ].map((m) => m[1]);
             if (nicknames.length > 0) {
                 const report = await callTool(client, "get-player-report", {
