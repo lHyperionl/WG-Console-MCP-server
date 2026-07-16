@@ -79,8 +79,8 @@ Built with **TypeScript**, the official **MCP SDK**, and **Zod** schema validati
 ### Installation
 
 ```bash
-git clone https://github.com/<your-username>/wargaming-mcp-server.git
-cd wargaming-mcp-server
+git clone https://github.com/lHyperionl/WG-Console-MCP-server.git
+cd WG-Console-MCP-server
 npm install
 
 # add your API key
