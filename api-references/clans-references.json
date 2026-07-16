@@ -1,0 +1,220 @@
+{
+    "metadata": {
+        "category": "Clan Methods",
+        "description": "Clan-related endpoints for World of Tanks Console API",
+        "base_url": "https://api-modernarmor.worldoftanks.com",
+        "endpoints_count": 4,
+        "note": "These endpoints provide access to clan information, member data, and clan glossary"
+    },
+    "clans_list": {
+        "endpoint": "/wotx/clans/list/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/clans/list/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns partial list of clans in alphabetical order by clan name or tag.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            },
+            "limit": {
+                "type": "numeric",
+                "required": false,
+                "default": 100,
+                "description": "Number of returned entries (fewer can be returned, but not more than 100). If the limit sent exceeds 100, a limit of 100 is applied (by default)."
+            },
+            "page_no": {
+                "type": "numeric",
+                "required": false,
+                "default": 1,
+                "description": "Page number. Default is 1. Min value is 1."
+            },
+            "search": {
+                "type": "string",
+                "required": false,
+                "description": "Part of name or tag for clan search. Minimum 2 characters"
+            }
+        },
+        "response": {
+            "clan_id": "numeric",
+            "color": "string",
+            "created_at": "timestamp",
+            "emblem_set_id": "numeric",
+            "members_count": "numeric",
+            "name": "string",
+            "tag": "string"
+        },
+        "errors": [
+            {
+                "code": 407,
+                "message": "SEARCH_NOT_SPECIFIED_OR_TOO_SHORT",
+                "description": "Search parameter not specified or too short. Minimum length: 2 characters."
+            }
+        ]
+    },
+    "clan_details": {
+        "endpoint": "/wotx/clans/info/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/clans/info/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns detailed clan information.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "clan_id": {
+                "type": "numeric,list",
+                "required": true,
+                "description": "Clan ID. Maximum limit: 100."
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            }
+        },
+        "response": {
+            "clan_id": "numeric",
+            "color": "string",
+            "created_at": "timestamp",
+            "creator_id": "numeric",
+            "creator_name": "string",
+            "description": "string",
+            "description_html": "string",
+            "emblem_set_id": "numeric",
+            "is_clan_disbanded": "boolean",
+            "leader_id": "numeric",
+            "leader_name": "string",
+            "members_count": "numeric",
+            "motto": "string",
+            "name": "string",
+            "old_name": "string",
+            "old_tag": "string",
+            "renamed_at": "timestamp",
+            "tag": "string",
+            "updated_at": "timestamp",
+            "members": {
+                "account_id": "numeric",
+                "account_name": "string",
+                "joined_at": "timestamp",
+                "role": "string",
+                "role_i18n": "string"
+            }
+        },
+        "errors": [
+            {
+                "code": 407,
+                "message": "CLAN_ID_LIST_LIMIT_EXCEEDED",
+                "description": "Limit of passed-in clan_id IDs exceeded. Maximum: 100."
+            },
+            {
+                "code": 404,
+                "message": "CLAN_NOT_FOUND",
+                "description": "Clan not found"
+            }
+        ]
+    },
+    "clan_member_info": {
+        "endpoint": "/wotx/clans/accountinfo/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/clans/accountinfo/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns player clan data.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "account_id": {
+                "type": "numeric,list",
+                "required": true,
+                "description": "Player account ID. Maximum limit: 100."
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            }
+        },
+        "response": {
+            "account_id": "numeric",
+            "clan_id": "numeric",
+            "joined_at": "timestamp",
+            "role": "string",
+            "role_i18n": "string",
+            "clan": {
+                "clan_id": "numeric",
+                "color": "string",
+                "created_at": "timestamp",
+                "emblem_set_id": "numeric",
+                "members_count": "numeric",
+                "name": "string",
+                "tag": "string"
+            }
+        },
+        "errors": [
+            {
+                "code": 407,
+                "message": "ACCOUNT_ID_LIST_LIMIT_EXCEEDED",
+                "description": "Limit of passed-in account_id IDs exceeded. Maximum: 100."
+            },
+            {
+                "code": 404,
+                "message": "ACCOUNT_NOT_FOUND",
+                "description": "Account not found"
+            }
+        ]
+    },
+    "clan_glossary": {
+        "endpoint": "/wotx/clans/glossary/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/clans/glossary/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns information on clan entities.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            }
+        },
+        "response": {
+            "clan_roles": {
+                "role_id": "string",
+                "name": "string",
+                "name_i18n": "string"
+            }
+        },
+        "errors": "Common API errors"
+    }
+}

@@ -1,0 +1,101 @@
+{
+    "metadata": {
+        "project_name": "World of Tanks Console API Reference",
+        "description": "Comprehensive API reference for Wargaming World of Tanks Console across all endpoint categories",
+        "base_url": "https://api-modernarmor.worldoftanks.com",
+        "total_endpoints": 22,
+        "last_updated": "2025-07-16",
+        "version": "1.0"
+    },
+    "categories": {
+        "account": {
+            "file": "account-references.json",
+            "description": "Player account related endpoints",
+            "endpoints_count": 5,
+            "endpoints": [
+                "players",
+                "player_personal_data",
+                "player_achievements",
+                "player_xuid_data",
+                "player_psnid_data"
+            ]
+        },
+        "auth": {
+            "file": "auth-references.json",
+            "description": "Authentication and OAuth endpoints",
+            "endpoints_count": 3,
+            "endpoints": ["auth_login", "auth_logout", "auth_prolongate"]
+        },
+        "clans": {
+            "file": "clans-references.json",
+            "description": "Clan-related endpoints",
+            "endpoints_count": 4,
+            "endpoints": [
+                "clans_list",
+                "clan_details",
+                "clan_member_info",
+                "clan_glossary"
+            ]
+        },
+        "tankopedia": {
+            "file": "tankopedia-references.json",
+            "description": "Game encyclopedia data endpoints",
+            "endpoints_count": 8,
+            "endpoints": [
+                "encyclopedia_vehicles",
+                "encyclopedia_achievements",
+                "encyclopedia_maps",
+                "encyclopedia_engines",
+                "encyclopedia_guns",
+                "encyclopedia_radios",
+                "encyclopedia_suspensions",
+                "encyclopedia_turrets"
+            ]
+        },
+        "player_vehicles": {
+            "file": "player-vehicles-references.json",
+            "description": "Player-specific vehicle statistics endpoints",
+            "endpoints_count": 2,
+            "endpoints": ["player_vehicle_achievements", "player_vehicle_stats"]
+        }
+    },
+    "implementation_status": {
+        "mcp_server_coverage": {
+            "implemented_endpoints": 22,
+            "total_endpoints": 22,
+            "coverage_percentage": 100.0,
+            "implemented_categories": {
+                "account": 5,
+                "clans": 4,
+                "tankopedia": 8,
+                "auth": 0,
+                "player_vehicles": 2
+            }
+        },
+        "missing_implementations": [
+            "auth_login",
+            "auth_logout",
+            "auth_prolongate"
+        ]
+    },
+    "usage_guide": {
+        "description": "How to use these reference files",
+        "steps": [
+            "1. Identify the category of endpoint you need (account, auth, clans, tankopedia, player_vehicles)",
+            "2. Open the corresponding reference file from the api-references/ directory",
+            "3. Find the specific endpoint and review parameters, response structure, and error codes",
+            "4. Use the information to implement MCP tools or make direct API calls",
+            "5. Reference the implementation_status to see what's already built vs missing"
+        ]
+    },
+    "file_structure": {
+        "api-references/": {
+            "account-references.json": "Account and player data endpoints",
+            "auth-references.json": "Authentication and OAuth endpoints",
+            "clans-references.json": "Clan search and details endpoints",
+            "tankopedia-references.json": "Encyclopedia/game data endpoints",
+            "player-vehicles-references.json": "Player vehicle statistics endpoints",
+            "index.json": "This master index file"
+        }
+    }
+}

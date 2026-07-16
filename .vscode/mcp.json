@@ -1,0 +1,9 @@
+{
+    "servers": {
+        "wargaming": {
+            "type": "stdio",
+            "command": "node",
+            "args": ["build/index.js"]
+        }
+    }
+}

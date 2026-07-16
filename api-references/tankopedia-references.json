@@ -1,0 +1,504 @@
+{
+    "metadata": {
+        "category": "Tankopedia Methods",
+        "description": "Game encyclopedia data endpoints for World of Tanks Console API",
+        "base_url": "https://api-modernarmor.worldoftanks.com",
+        "endpoints_count": 9,
+        "note": "These endpoints provide access to game encyclopedia data including vehicles, achievements, maps, modules, and crew information"
+    },
+    "encyclopedia_vehicles": {
+        "endpoint": "/wotx/encyclopedia/vehicles/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/vehicles/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns list of available vehicles.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            },
+            "limit": {
+                "type": "numeric",
+                "required": false,
+                "description": "Number of returned entries (fewer can be returned, but not more than 100). If the limit sent exceeds 100, a limit of 100 is applied (by default)."
+            },
+            "nation": {
+                "type": "string,list",
+                "required": false,
+                "description": "Nation. Maximum limit: 100."
+            },
+            "page_no": {
+                "type": "numeric",
+                "required": false,
+                "description": "Result page number"
+            },
+            "tank_id": {
+                "type": "numeric,list",
+                "required": false,
+                "description": "Vehicle ID. Maximum limit: 100."
+            },
+            "tier": {
+                "type": "numeric,list",
+                "required": false,
+                "description": "Tier. Maximum limit: 100."
+            }
+        },
+        "response": {
+            "description": "string",
+            "era": "string",
+            "has_multi_weapon": "boolean",
+            "is_premium": "boolean",
+            "name": "string",
+            "nation": "string",
+            "next_tanks": "associative array",
+            "price_credit": "numeric",
+            "price_gold": "numeric",
+            "prices_xp": "associative array",
+            "short_name": "string",
+            "tag": "string",
+            "tank_id": "numeric",
+            "tier": "numeric",
+            "total_turrets": "numeric",
+            "type": "string",
+            "images": {
+                "big_icon": "string"
+            },
+            "modules_tree": {
+                "is_default": "boolean",
+                "module_id": "numeric",
+                "name": "string",
+                "next_modules": "list of integers",
+                "next_tanks": "list of integers",
+                "price_credit": "numeric",
+                "price_xp": "numeric",
+                "type": "string"
+            }
+        },
+        "errors": "Common API errors"
+    },
+    "encyclopedia_achievements": {
+        "endpoint": "/wotx/encyclopedia/achievements/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/achievements/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns list of awards, medals, ribbons.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "category": {
+                "type": "string,list",
+                "required": false,
+                "description": "Filter by award category. Maximum limit: 100. Valid values: 'achievements' — Achievements, 'ribbons' — Ribbons"
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            }
+        },
+        "response": {
+            "category": "string",
+            "condition": "string",
+            "description": "string",
+            "hero_info": "string",
+            "image": "string",
+            "name": "string",
+            "section": "string",
+            "type": "string",
+            "weight": "numeric",
+            "options": {
+                "description": "string",
+                "image": "string",
+                "name": "string",
+                "nation_images": {
+                    "x200": "associative array"
+                }
+            }
+        },
+        "errors": "Common API errors"
+    },
+    "encyclopedia_maps": {
+        "endpoint": "/wotx/encyclopedia/arenas/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/arenas/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns information about maps.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            }
+        },
+        "response": {
+            "arena_id": "string",
+            "camouflage_type": "string",
+            "description": "string",
+            "name_i18n": "string"
+        },
+        "errors": "Common API errors"
+    },
+    "encyclopedia_modules": {
+        "endpoint": "/wotx/encyclopedia/modules/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/modules/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns list of available modules that can be installed on vehicles (engines, guns, radios, suspensions, turrets).",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            },
+            "limit": {
+                "type": "numeric",
+                "required": false,
+                "description": "Number of returned entries (fewer can be returned, but not more than 100). If the limit sent exceeds 100, a limit of 100 is applied (by default)."
+            },
+            "module_id": {
+                "type": "numeric,list",
+                "required": false,
+                "description": "Module ID. Maximum limit: 100."
+            },
+            "type": {
+                "type": "string,list",
+                "required": false,
+                "description": "Module type. Valid values: engine, gun, radio, suspension, turret"
+            }
+        },
+        "response": {
+            "module_id": "numeric",
+            "name": "string",
+            "nation": "string",
+            "price_credit": "numeric",
+            "price_xp": "numeric",
+            "tier": "numeric",
+            "type": "string",
+            "weight": "numeric"
+        },
+        "errors": "Common API errors"
+    },
+    "encyclopedia_crew_roles": {
+        "endpoint": "/wotx/encyclopedia/crewroles/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/crewroles/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns information about crew roles.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            },
+            "role": {
+                "type": "string,list",
+                "required": false,
+                "description": "Crew role. Valid values: commander, gunner, driver, radioman, loader"
+            }
+        },
+        "response": {
+            "role": "string",
+            "name": "string",
+            "skills": "associative array"
+        },
+        "errors": "Common API errors"
+    },
+    "encyclopedia_info": {
+        "endpoint": "/wotx/encyclopedia/info/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/info/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns general information about the Tankopedia.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            }
+        },
+        "response": {
+            "game_version": "string",
+            "tanks_updated_at": "timestamp",
+            "vehicle_crew_roles": "associative array",
+            "vehicle_nations": "associative array",
+            "vehicle_types": "associative array"
+        },
+        "errors": "Common API errors"
+    },
+    "encyclopedia_vehicle_upgrades": {
+        "endpoint": "/wotx/encyclopedia/vehicleupgrades/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/vehicleupgrades/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns list of equipment and consumables.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            },
+            "type": {
+                "type": "string,list",
+                "required": false,
+                "description": "Equipment type. Valid values: equipment, consumables"
+            }
+        },
+        "response": {
+            "description": "string",
+            "image": "string",
+            "name": "string",
+            "price_credit": "numeric",
+            "price_gold": "numeric",
+            "type": "string",
+            "weight": "numeric"
+        },
+        "errors": "Common API errors"
+    },
+    "encyclopedia_vehicle_characteristics": {
+        "endpoint": "/wotx/encyclopedia/vehicleprofile/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/vehicleprofile/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns vehicle configuration characteristics based on the specified module IDs.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "tank_id": {
+                "type": "numeric",
+                "required": true,
+                "description": "Vehicle ID"
+            },
+            "engine_id": {
+                "type": "numeric",
+                "required": false,
+                "description": "Engine ID. If module is not specified, standard module is used by default."
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "gun_id": {
+                "type": "numeric",
+                "required": false,
+                "description": "Gun ID. If module is not specified, standard module is used by default."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            },
+            "profile_id": {
+                "type": "string",
+                "required": false,
+                "description": "Configuration ID. If specified, parameters of IDs of separate modules are ignored."
+            },
+            "radio_id": {
+                "type": "numeric",
+                "required": false,
+                "description": "Radio ID. If module is not specified, standard module is used by default."
+            },
+            "suspension_id": {
+                "type": "numeric",
+                "required": false,
+                "description": "Suspension ID. If module is not specified, standard module is used by default."
+            },
+            "turret_id": {
+                "type": "numeric",
+                "required": false,
+                "description": "Turret ID. If module is not specified, standard module is used by default."
+            }
+        },
+        "response": {
+            "hp": "numeric",
+            "hull_hp": "numeric",
+            "hull_weight": "numeric",
+            "is_default": "boolean",
+            "max_ammo": "numeric",
+            "max_weight": "numeric",
+            "profile_id": "string",
+            "speed_backward": "numeric",
+            "speed_forward": "numeric",
+            "tank_id": "numeric",
+            "weight": "numeric",
+            "ammo": {
+                "damage": "list of integers",
+                "penetration": "list of integers",
+                "type": "string",
+                "stun": {
+                    "duration": "object"
+                }
+            },
+            "armor": {
+                "hull": {
+                    "front": "numeric",
+                    "rear": "numeric",
+                    "sides": "numeric"
+                },
+                "turret": {
+                    "front": "numeric",
+                    "rear": "numeric",
+                    "sides": "numeric"
+                }
+            },
+            "autosiege": {
+                "autoswitch_off_speed": "numeric",
+                "autoswitch_on_speed": "numeric",
+                "switch_off_time": "float",
+                "switch_on_time": "float"
+            },
+            "engine": {
+                "fire_chance": "float",
+                "name": "string",
+                "power": "numeric",
+                "tag": "string",
+                "tier": "numeric",
+                "weight": "numeric"
+            },
+            "gun": {
+                "aim_time": "float",
+                "caliber": "numeric",
+                "dispersion": "float",
+                "fire_rate": "float",
+                "move_down_arc": "numeric",
+                "move_up_arc": "numeric",
+                "name": "string",
+                "reload_time": "float",
+                "tag": "string",
+                "tier": "numeric",
+                "traverse_speed": "numeric",
+                "weight": "numeric"
+            },
+            "modules": {
+                "engine_id": "numeric",
+                "gun_id": "numeric",
+                "radio_id": "numeric",
+                "suspension_id": "numeric",
+                "turret_id": "numeric"
+            },
+            "multi_turret": {
+                "turrets": "list of integers"
+            },
+            "multi_weapon": {
+                "gun_group_number": "numeric",
+                "guns": "list of integers",
+                "turret_id": "numeric"
+            },
+            "radio": {
+                "name": "string",
+                "signal_range": "numeric",
+                "tag": "string",
+                "tier": "numeric",
+                "weight": "numeric"
+            },
+            "rapid": {
+                "speed_backward": "numeric",
+                "speed_forward": "numeric",
+                "suspension_steering_lock_angle": "numeric",
+                "switch_off_time": "float",
+                "switch_on_time": "float",
+                "turret_traverse_speed": "numeric"
+            },
+            "siege": {
+                "aim_time": "float",
+                "dispersion": "float",
+                "speed_backward": "numeric",
+                "speed_forward": "numeric",
+                "switch_off_time": "float",
+                "switch_on_time": "float"
+            },
+            "suspension": {
+                "load_limit": "numeric",
+                "name": "string",
+                "steering_lock_angle": "numeric",
+                "tag": "string",
+                "tier": "numeric",
+                "traverse_speed": "numeric",
+                "weight": "numeric"
+            },
+            "turbo": {
+                "aim_time": "float",
+                "speed_backward": "numeric",
+                "speed_forward": "numeric",
+                "switch_off_time": "float",
+                "switch_on_time": "float"
+            },
+            "turret": {
+                "hp": "numeric",
+                "name": "string",
+                "tag": "string",
+                "tier": "numeric",
+                "traverse_left_arc": "numeric",
+                "traverse_right_arc": "numeric",
+                "traverse_speed": "numeric",
+                "view_range": "numeric",
+                "weight": "numeric"
+            }
+        },
+        "errors": "Common API errors"
+    }
+}

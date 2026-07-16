@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # Runs the full smoke test when a WARGAMING_API_KEY secret is
+      # configured; otherwise verifies the MCP protocol layer offline.
+      - name: Smoke test
+        env:
+          WARGAMING_API_KEY: ${{ secrets.WARGAMING_API_KEY }}
+        run: |
+          if [ -z "$WARGAMING_API_KEY" ]; then
+            echo "No API key secret configured — running offline checks only."
+            export WARGAMING_API_KEY=ci-offline-dummy
+            export SKIP_LIVE=1
+          fi
+          node test/smoke-test.js

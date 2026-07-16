@@ -1,0 +1,171 @@
+{
+    "metadata": {
+        "category": "Player Vehicle Methods",
+        "description": "Player-specific vehicle statistics and performance data endpoints for World of Tanks Console API",
+        "base_url": "https://api-modernarmor.worldoftanks.com",
+        "endpoints_count": 2,
+        "note": "These endpoints provide detailed statistics about individual player vehicle performance, achievements, and battle history"
+    },
+    "player_vehicle_stats": {
+        "endpoint": "/wotx/tanks/stats/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/tanks/stats/?application_id=c6e18375d788f29b4c118307af227b93",
+        "description": "Returns overall statistics, Tank Company statistics, and clan statistics per each vehicle for each user.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "account_id": {
+                "type": "numeric",
+                "required": true,
+                "description": "Player account ID. Min value is 0."
+            },
+            "access_token": {
+                "type": "string",
+                "required": false,
+                "description": "Access token for the private data of a user's account; can be received via the authorization method; valid within a stated time period"
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "in_garage": {
+                "type": "string",
+                "required": false,
+                "description": "Filter by vehicle availability in the Garage. If the parameter is not specified, all vehicles are returned. Parameter processing requires a valid access_token for the specified account_id. Valid values: '1' — Return vehicles available in the Garage. '0' — Return vehicles that are no longer in the Garage."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            },
+            "tank_id": {
+                "type": "numeric,list",
+                "required": false,
+                "description": "Player's vehicle ID. Maximum limit: 100."
+            }
+        },
+        "response": {
+            "account_id": "numeric",
+            "battle_life_time": "timestamp",
+            "in_garage_updated": "timestamp",
+            "last_battle_time": "timestamp",
+            "mark_of_mastery": "numeric",
+            "mark_of_mastery_battles_count": "numeric",
+            "marks_on_gun": "numeric",
+            "marks_on_gun_battles_count": "numeric",
+            "max_frags": "numeric",
+            "max_xp": "numeric",
+            "tank_id": "numeric",
+            "trees_cut": "numeric",
+            "frags": "associative array",
+            "in_garage": "boolean",
+            "all": {
+                "battles": "numeric",
+                "capture_points": "numeric",
+                "damage_assisted_radio": "numeric",
+                "damage_assisted_track": "numeric",
+                "damage_assisted_wheel": "numeric",
+                "damage_dealt": "numeric",
+                "damage_received": "numeric",
+                "direct_hits_received": "numeric",
+                "dropped_capture_points": "numeric",
+                "explosion_hits": "numeric",
+                "explosion_hits_received": "numeric",
+                "frags": "numeric",
+                "hits": "numeric",
+                "losses": "numeric",
+                "max_damage": "numeric",
+                "no_damage_direct_hits_received": "numeric",
+                "piercings": "numeric",
+                "piercings_received": "numeric",
+                "shots": "numeric",
+                "spotted": "numeric",
+                "survived_battles": "numeric",
+                "wins": "numeric",
+                "xp": "numeric"
+            },
+            "company": {
+                "battles": "numeric",
+                "capture_points": "numeric",
+                "damage_assisted_radio": "numeric",
+                "damage_assisted_track": "numeric",
+                "damage_assisted_wheel": "numeric",
+                "damage_dealt": "numeric",
+                "damage_received": "numeric",
+                "direct_hits_received": "numeric",
+                "dropped_capture_points": "numeric",
+                "explosion_hits": "numeric",
+                "explosion_hits_received": "numeric",
+                "frags": "numeric",
+                "hits": "numeric",
+                "losses": "numeric",
+                "max_damage": "numeric",
+                "no_damage_direct_hits_received": "numeric",
+                "piercings": "numeric",
+                "piercings_received": "numeric",
+                "shots": "numeric",
+                "spotted": "numeric",
+                "survived_battles": "numeric",
+                "wins": "numeric",
+                "xp": "numeric"
+            }
+        },
+        "errors": "Common API errors"
+    },
+    "player_vehicle_achievements": {
+        "endpoint": "/wotx/tanks/achievements/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/tanks/achievements/?application_id=c6e18375d788f29b4c118307af227b93",
+        "description": "Returns players' achievement details. Achievement properties define the achievements field values: 1-4 for Mastery Badges and Stage Achievements (type: 'class'); maximum value of Achievement series (type: 'series'); number of achievements earned from sections: Battle Hero, Epic Achievements, Group Achievements, Special Achievements, etc. (type: 'repeatable, single, custom').",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "account_id": {
+                "type": "numeric",
+                "required": true,
+                "description": "Player account ID. Min value is 0."
+            },
+            "access_token": {
+                "type": "string",
+                "required": false,
+                "description": "Access token for the private data of a user's account; can be received via the authorization method; valid within a stated time period"
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "in_garage": {
+                "type": "string",
+                "required": false,
+                "description": "Filter by vehicle availability in the Garage. If the parameter is not specified, all vehicles are returned. Parameter processing requires a valid access_token for the specified account_id. Valid values: '1' — Return vehicles available in the Garage. '0' — Return vehicles that are no longer in the Garage."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            },
+            "tank_id": {
+                "type": "numeric,list",
+                "required": false,
+                "description": "Player's vehicle ID. Maximum limit: 100."
+            }
+        },
+        "response": {
+            "account_id": "numeric",
+            "achievements": "associative array",
+            "max_series": "associative array",
+            "ribbons": "associative array",
+            "series": "associative array",
+            "tank_id": "numeric"
+        },
+        "errors": "Common API errors"
+    }
+}

@@ -1,0 +1,259 @@
+{
+    "metadata": {
+        "category": "Account Methods",
+        "description": "Player account related endpoints for World of Tanks Console API",
+        "base_url": "https://api-modernarmor.worldoftanks.com",
+        "endpoints_count": 5,
+        "note": "These endpoints provide access to player account information, achievements, and platform-specific data"
+    },
+    "players": {
+        "endpoint": "/wotx/account/list/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/account/list/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns partial list of players. The list is filtered by initial characters of user name and sorted alphabetically.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "search": {
+                "type": "string",
+                "required": true,
+                "description": "Player name search string. Parameter 'type' defines minimum length and type of search. Using the exact search type, you can enter several names, separated with commas. Maximum length: 24."
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            },
+            "limit": {
+                "type": "numeric",
+                "required": false,
+                "description": "Number of returned entries (fewer can be returned, but not more than 100). If the limit sent exceeds 100, a limit of None is applied (by default)."
+            },
+            "type": {
+                "type": "string",
+                "required": false,
+                "default": "startswith",
+                "description": "Search type. Valid values: 'startswith' — Search by initial characters of player name. Minimum length: 3 characters. Maximum length: 24 characters. (by default) 'exact' — Search by exact match of player name. Case insensitive. You can enter several names, separated with commas (up to 100)."
+            }
+        },
+        "response": {
+            "account_id": "numeric",
+            "nickname": "string"
+        },
+        "errors": [
+            {
+                "code": 402,
+                "message": "SEARCH_NOT_SPECIFIED",
+                "description": "Search parameter not specified with no account_id"
+            },
+            {
+                "code": 407,
+                "message": "NOT_ENOUGH_SEARCH_LENGTH",
+                "description": "Search parameter is not long enough. Allowed value depends on type parameter."
+            },
+            {
+                "code": 407,
+                "message": "SEARCH_LIST_LIMIT_EXCEEDED",
+                "description": "Limit of specified names in search parameter exceeded (>100)"
+            }
+        ]
+    },
+    "player_personal_data": {
+        "endpoint": "/wotx/account/info/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/account/info/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns player details.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "account_id": {
+                "type": "numeric,list",
+                "required": true,
+                "description": "Player account ID. Maximum limit: 100."
+            },
+            "access_token": {
+                "type": "string",
+                "required": false,
+                "description": "Access token for the private data of a user's account; can be received via the authorization method; valid within a stated time period"
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            }
+        },
+        "response": {
+            "account_id": "numeric",
+            "created_at": "timestamp",
+            "global_rating": "numeric",
+            "last_battle_time": "timestamp",
+            "nickname": "string",
+            "updated_at": "timestamp",
+            "private": {
+                "ban_info": "string",
+                "ban_time": "timestamp",
+                "battle_life_time": "timestamp",
+                "credits": "numeric",
+                "empty_slots": "numeric",
+                "free_xp": "numeric",
+                "gold": "numeric",
+                "is_premium": "boolean",
+                "premium_expires_at": "timestamp",
+                "slots": "numeric",
+                "restrictions": {
+                    "chat_ban_time": "timestamp"
+                }
+            },
+            "statistics": {
+                "damage_assisted_radio": "numeric",
+                "damage_assisted_track": "numeric",
+                "damage_assisted_wheel": "numeric",
+                "direct_hits_received": "numeric",
+                "explosion_hits": "numeric",
+                "explosion_hits_received": "numeric",
+                "frags": "associative array",
+                "max_damage": "numeric",
+                "max_damage_tank_id": "numeric",
+                "max_frags": "numeric",
+                "max_frags_tank_id": "numeric",
+                "max_xp": "numeric",
+                "max_xp_tank_id": "numeric",
+                "no_damage_direct_hits_received": "numeric",
+                "piercings": "numeric",
+                "piercings_received": "numeric",
+                "trees_cut": "numeric",
+                "all": {
+                    "battles": "numeric",
+                    "capture_points": "numeric",
+                    "damage_dealt": "numeric",
+                    "damage_received": "numeric",
+                    "dropped_capture_points": "numeric",
+                    "frags": "numeric",
+                    "hits": "numeric",
+                    "losses": "numeric",
+                    "shots": "numeric",
+                    "spotted": "numeric",
+                    "survived_battles": "numeric",
+                    "wins": "numeric",
+                    "xp": "numeric"
+                },
+                "company": {
+                    "battles": "numeric",
+                    "capture_points": "numeric",
+                    "damage_dealt": "numeric",
+                    "damage_received": "numeric",
+                    "dropped_capture_points": "numeric",
+                    "frags": "numeric",
+                    "hits": "numeric",
+                    "losses": "numeric",
+                    "shots": "numeric",
+                    "spotted": "numeric",
+                    "survived_battles": "numeric",
+                    "wins": "numeric",
+                    "xp": "numeric"
+                }
+            }
+        },
+        "errors": [
+            {
+                "code": 407,
+                "message": "ACCOUNT_ID_LIST_LIMIT_EXCEEDED",
+                "description": "Limit of passed-in account_id IDs exceeded. Maximum: 100."
+            }
+        ]
+    },
+    "player_achievements": {
+        "endpoint": "/wotx/account/achievements/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/account/achievements/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns players' achievement details. Achievement properties define the achievements field values: 1-4 for Mastery Badges and Stage Achievements (type: 'class'); maximum value of Achievement series (type: 'series'); number of achievements earned from sections: Battle Hero, Epic Achievements, Group Achievements, Special Achievements, etc. (type: 'repeatable, single, custom').",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "account_id": {
+                "type": "numeric,list",
+                "required": true,
+                "description": "Player account ID. Maximum limit: 100."
+            },
+            "fields": {
+                "type": "string,list",
+                "required": false,
+                "description": "Response field. The fields are separated with commas. Embedded fields are separated with dots. To exclude a field, use '-' in front of its name. In case the parameter is not defined, the method returns all fields. Maximum limit: 100."
+            },
+            "language": {
+                "type": "string",
+                "required": false,
+                "default": "en",
+                "description": "Localization language. Valid values: en, ru, pl, de, fr, es, tr."
+            }
+        },
+        "response": {
+            "achievements": "associative array",
+            "max_series": "associative array",
+            "ribbons": "associative array"
+        },
+        "errors": "Common API errors"
+    },
+    "player_xuid_data": {
+        "endpoint": "/wotx/account/xuidinfo/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/account/xuidinfo/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns player details based on the player Microsoft XUID.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "xuid": {
+                "type": "numeric,list",
+                "required": true,
+                "description": "Player Microsoft XUID. Maximum limit: 100."
+            }
+        },
+        "response": {
+            "account_id": "numeric",
+            "xuid": "numeric"
+        },
+        "errors": "Common API errors"
+    },
+    "player_psnid_data": {
+        "endpoint": "/wotx/account/psninfo/",
+        "url": "https://api-modernarmor.worldoftanks.com/wotx/account/psninfo/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
+        "description": "Returns player data based on Play Station UID.",
+        "parameters": {
+            "application_id": {
+                "type": "string",
+                "required": true,
+                "description": "Application ID"
+            },
+            "psnid": {
+                "type": "string,list",
+                "required": true,
+                "description": "Play Station UID. Maximum limit: 100."
+            }
+        },
+        "response": {
+            "account_id": "numeric",
+            "psnid": "string"
+        },
+        "errors": "Common API errors"
+    }
+}
