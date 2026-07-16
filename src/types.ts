@@ -17,6 +17,9 @@ export interface PlayerInfo {
 
 export interface PlayerStats {
     account_id: number;
+    nickname?: string;
+    last_battle_time?: number;
+    created_at?: number;
     statistics: {
         all: {
             battles: number;
@@ -53,6 +56,23 @@ export interface ClanInfo {
     members_count: number;
     created_at: number;
     description: string;
+}
+
+export interface ClanMemberInfo {
+    account_id: number;
+    account_name?: string;
+    role?: string;
+    role_i18n?: string;
+    joined_at?: number;
+}
+
+// /wotx/clans/info/ — the member list shape varies across Wargaming APIs
+// (array, dict keyed by account_id, or a bare id list), so model all three.
+export interface ClanDetails extends ClanInfo {
+    members?: ClanMemberInfo[] | Record<string, ClanMemberInfo>;
+    members_ids?: number[];
+    leader_name?: string;
+    motto?: string;
 }
 
 export interface PlayerVehicleStats {

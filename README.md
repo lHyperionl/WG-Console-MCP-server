@@ -6,9 +6,12 @@ Built with **TypeScript**, the official **MCP SDK**, and **Zod** schema validati
 
 ## Features
 
-- **25 MCP tools** covering players, clans, vehicles, and the full Tankopedia encyclopedia
+- **30 MCP tools** covering players, clans, vehicles, progress tracking, and the full Tankopedia encyclopedia
+- **Session & progress tracking** — the Wargaming API only exposes *lifetime* totals, so this server stores local stat snapshots and diffs them: `get-player-progress` answers "how did I do tonight?" with battles, win rate, average damage, and a per-tank breakdown *over the interval*. Snapshots also accumulate passively whenever you run `get-player-report`.
 - **One-shot player reports** — `get-player-report` takes just a nickname and combines account search, overall stats, derived metrics (damage ratio, survival rate, frags/battle), top tanks, best performers, and clan membership into a single answer
 - **Side-by-side tank comparison** — `compare-tanks "IS-7" "Maus"` produces a full armor/firepower/mobility table
+- **Side-by-side player comparison** — `compare-players` puts two players' stats, most-played tanks, and best performers next to each other
+- **Whole-clan reports** — `get-clan-report` fetches stats for every member in batched requests and aggregates them: battle-weighted win rate, activity buckets, top performers
 - **Human-readable output everywhere** — tank IDs and achievement IDs are resolved to real names via a cached Tankopedia lookup
 - **Smart tank search** — fuzzy name matching (`IS-7`, `IS 7`, and `IS7` all work)
 - **Client-side rate limiting & retries** — requests are throttled to Wargaming's 10 req/s limit and automatically retried on transient errors
@@ -18,12 +21,26 @@ Built with **TypeScript**, the official **MCP SDK**, and **Zod** schema validati
 
 ## Available Tools
 
-### Reports (2) — start here
+### Reports (4) — start here
 
 | Tool | Description |
 | --- | --- |
 | `get-player-report` | Complete player profile from a single nickname: stats, derived metrics, top tanks, best performers, clan |
 | `compare-tanks` | Side-by-side comparison table of two tanks (by name or ID): armor, gun, ammo, mobility, view range |
+| `compare-players` | Side-by-side comparison of two players: win rate, damage, survival, most-played and best tanks |
+| `get-clan-report` | Aggregate report for an entire clan (by tag, name, or ID): battle-weighted averages, activity, top performers |
+
+### Progress Tracking (3)
+
+The Wargaming API only returns lifetime totals — these tools store local snapshots (one small JSON file per player) and diff them to reconstruct recent performance.
+
+| Tool | Description |
+| --- | --- |
+| `snapshot-player` | Record a baseline snapshot of a player's current lifetime + per-tank stats |
+| `get-player-progress` | Performance since a snapshot: battles, win rate, avg damage, per-tank breakdown over the interval; auto-saves a new snapshot |
+| `list-player-snapshots` | List the stored snapshots for a player |
+
+Snapshots live in `~/.wargaming-mcp-server/snapshots` (override with the `WARGAMING_MCP_DATA_DIR` env var) and are also recorded passively by `get-player-report`, so history accumulates from normal use.
 
 ### Player & Account (8)
 
@@ -76,7 +93,25 @@ Built with **TypeScript**, the official **MCP SDK**, and **Zod** schema validati
 - A free **Wargaming API key** from the [Wargaming Developer Portal](https://developers.wargaming.net/)
   > ⚠️ Choose a **Mobile** application type unless you have a static IP — **Server** keys are locked to an IP allowlist and will return `INVALID_IP_ADDRESS` from other addresses.
 
-### Installation
+### Option A: Run via npx (no install)
+
+Once published to npm, no clone or build is needed — point your MCP client at `npx`:
+
+```json
+{
+    "mcpServers": {
+        "wargaming": {
+            "command": "npx",
+            "args": ["-y", "wargaming-mcp-server"],
+            "env": {
+                "WARGAMING_API_KEY": "your_api_key_here"
+            }
+        }
+    }
+}
+```
+
+### Option B: Install from source
 
 ```bash
 git clone https://github.com/lHyperionl/WG-Console-MCP-server.git
@@ -97,7 +132,7 @@ npm test           # full suite: protocol checks + live API calls
 SKIP_LIVE=1 npm test   # offline: protocol checks only (no API key traffic)
 ```
 
-The smoke test builds the project, spawns the MCP server over stdio, verifies all 25 tools are registered, and exercises live calls against the Wargaming API — including the full `search → report` and `compare-tanks` flows.
+The smoke test builds the project, spawns the MCP server over stdio, verifies all 30 tools are registered, and exercises live calls against the Wargaming API — including the full `search → report`, `compare-tanks`, `compare-players`, `get-clan-report`, and `snapshot → progress` flows.
 
 ## Architecture
 
@@ -108,12 +143,15 @@ src/
 ├── types.ts              # Shared Wargaming API response types
 ├── format.ts             # Number/percentage formatting helpers
 ├── encyclopedia-cache.ts # Cached tank & achievement name resolution
+├── player-lookup.ts      # Shared nickname -> account resolution
+├── snapshots.ts          # Local stat snapshot store for progress tracking
 └── tools/
     ├── players.ts        # 8 player/account tools
     ├── clans.ts          # 4 clan tools
     ├── vehicles.ts       # 5 vehicle tools
     ├── encyclopedia.ts   # 6 tankopedia tools
-    └── reports.ts        # get-player-report, compare-tanks
+    ├── reports.ts        # get-player-report, compare-tanks, compare-players, get-clan-report
+    └── progress.ts       # snapshot-player, get-player-progress, list-player-snapshots
 ```
 
 Cross-cutting concerns live in one place: every tool goes through `makeWargamingRequest`, which enforces the 10 req/s limit with a sliding-window throttle, retries transient failures (HTTP 5xx/429 and `REQUEST_LIMIT_EXCEEDED`) with backoff, caches encyclopedia responses for an hour, and annotates well-known API errors with fix-it hints.
@@ -140,9 +178,11 @@ Restart Claude Desktop, then try:
 
 - *"Give me a full report on player 'PlayerName' on Xbox"*
 - *"Compare the IS-7 and the T110E5"*
+- *"Compare me and my clanmate 'OtherPlayer'"*
+- *"Take a snapshot of my stats"* — then, after a session: *"How did I do tonight?"*
+- *"Give me a report on the clan with tag 'STEEL' — who are the top performers?"*
 - *"Show me all tier 10 German heavy tanks"*
 - *"Which of PlayerName's tanks has the best win rate?"*
-- *"Search for clans with 'STEEL' in their name on PS4"*
 
 VS Code users: the repo ships a ready-made [.vscode/mcp.json](.vscode/mcp.json) for the built-in MCP support.
 

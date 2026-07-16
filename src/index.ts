@@ -8,13 +8,14 @@ import { registerClanTools } from "./tools/clans.js";
 import { registerVehicleTools } from "./tools/vehicles.js";
 import { registerEncyclopediaTools } from "./tools/encyclopedia.js";
 import { registerReportTools } from "./tools/reports.js";
+import { registerProgressTools } from "./tools/progress.js";
 
 // Fail fast at startup if the API key is missing
 requireApiKey();
 
 const server = new McpServer({
     name: "wargaming-mcp-server",
-    version: "2.1.0",
+    version: "2.2.0",
     capabilities: {
         resources: {},
         tools: {},
@@ -26,6 +27,7 @@ registerClanTools(server);
 registerVehicleTools(server);
 registerEncyclopediaTools(server);
 registerReportTools(server);
+registerProgressTools(server);
 
 async function main() {
     const transport = new StdioServerTransport();

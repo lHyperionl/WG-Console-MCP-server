@@ -16,7 +16,13 @@
  */
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import {
+    StdioClientTransport,
+    getDefaultEnvironment,
+} from "@modelcontextprotocol/sdk/client/stdio.js";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 
 const EXPECTED_TOOLS = [
     // Player & account
@@ -49,6 +55,12 @@ const EXPECTED_TOOLS = [
     // Reports
     "get-player-report",
     "compare-tanks",
+    "compare-players",
+    "get-clan-report",
+    // Progress tracking
+    "snapshot-player",
+    "get-player-progress",
+    "list-player-snapshots",
 ];
 
 const SKIP_LIVE = process.env.SKIP_LIVE === "1";
@@ -73,9 +85,21 @@ async function callTool(client, name, args) {
 async function main() {
     console.log("🧪 Wargaming MCP server smoke test\n");
 
+    // Keep snapshot writes out of the real user data dir during tests.
+    // The SDK filters the spawned server's environment to a safe allowlist,
+    // so the API key must be passed through explicitly for CI (which sets
+    // it as an env var instead of a .env file).
+    const dataDir = mkdtempSync(path.join(tmpdir(), "wg-mcp-smoke-"));
     const transport = new StdioClientTransport({
         command: process.execPath,
         args: ["build/index.js"],
+        env: {
+            ...getDefaultEnvironment(),
+            ...(process.env.WARGAMING_API_KEY
+                ? { WARGAMING_API_KEY: process.env.WARGAMING_API_KEY }
+                : {}),
+            WARGAMING_MCP_DATA_DIR: dataDir,
+        },
     });
     const client = new Client({ name: "smoke-test", version: "1.0.0" });
 
@@ -159,15 +183,80 @@ async function main() {
             );
 
             // Chain search -> report to exercise get-player-report end-to-end
-            const nicknameMatch = players.match(/• (\S+) \(ID: \d+\)/);
-            if (nicknameMatch) {
+            const nicknames = [
+                ...players.matchAll(/• (\S+) \(ID: \d+\)/g),
+            ].map((m) => m[1]);
+            if (nicknames.length > 0) {
                 const report = await callTool(client, "get-player-report", {
                     platform: "xbox",
-                    nickname: nicknameMatch[1],
+                    nickname: nicknames[0],
                 });
                 check(
                     /Player Report:/.test(report),
-                    `get-player-report builds a report for ${nicknameMatch[1]}`
+                    `get-player-report builds a report for ${nicknames[0]}`
+                );
+
+                // Progress tracking: snapshot, then diff against it
+                const snapshot = await callTool(client, "snapshot-player", {
+                    platform: "xbox",
+                    nickname: nicknames[0],
+                });
+                check(
+                    /Snapshot for/.test(snapshot),
+                    "snapshot-player records a baseline"
+                );
+                const progress = await callTool(
+                    client,
+                    "get-player-progress",
+                    { platform: "xbox", nickname: nicknames[0] }
+                );
+                check(
+                    /Progress Report:|No battles played|recorded the first one/.test(
+                        progress
+                    ),
+                    "get-player-progress diffs against the snapshot"
+                );
+                const snapshotList = await callTool(
+                    client,
+                    "list-player-snapshots",
+                    { platform: "xbox", nickname: nicknames[0] }
+                );
+                check(
+                    /Stored snapshots for/.test(snapshotList),
+                    "list-player-snapshots lists the stored snapshot"
+                );
+            }
+            if (nicknames.length > 1) {
+                const playerComparison = await callTool(
+                    client,
+                    "compare-players",
+                    {
+                        platform: "xbox",
+                        player_a: nicknames[0],
+                        player_b: nicknames[1],
+                    }
+                );
+                check(
+                    /\| Battles \|/.test(playerComparison),
+                    `compare-players compares ${nicknames[0]} vs ${nicknames[1]}`
+                );
+            }
+
+            // Clan report: search -> aggregate report by clan ID
+            const clans = await callTool(client, "search-clans", {
+                platform: "xbox",
+                search: "tank",
+                limit: 3,
+            });
+            const clanIdMatch = clans.match(/ID: (\d+)/);
+            if (clanIdMatch) {
+                const clanReport = await callTool(client, "get-clan-report", {
+                    platform: "xbox",
+                    clan: clanIdMatch[1],
+                });
+                check(
+                    /Clan Report:/.test(clanReport),
+                    "get-clan-report aggregates member stats"
                 );
             }
         }
