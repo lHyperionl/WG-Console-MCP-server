@@ -78,12 +78,12 @@ Snapshots live in `~/.wargaming-mcp-server/snapshots` (override with the `WARGAM
 
 | Tool | Description |
 | --- | --- |
-| `get-tankopedia-info` | Game version, nations, vehicle types, crew roles |
+| `get-tankopedia-info` | Game version, nations, vehicle types, achievement sections |
 | `get-maps` | Battle maps with descriptions |
 | `get-encyclopedia-achievements` | All achievements, medals, and ribbons |
 | `get-encyclopedia-modules` | Detailed module database |
 | `get-crew-roles` | Crew roles and their skills |
-| `get-vehicle-upgrades` | Equipment and consumables |
+| `get-vehicle-upgrades` | Equipment and consumables for a specific tank (by name or ID) |
 
 ## Quick Start
 
