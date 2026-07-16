@@ -50,9 +50,10 @@ export function registerVehicleTools(server: McpServer): void {
                 ),
         },
         async ({ platform, nation, type, tier, name }) => {
+            // nation and tier are filtered server-side; the console API
+            // silently ignores a `type` param, so type is filtered locally
             const params: Record<string, string | number> = {};
             if (nation) params.nation = nation;
-            if (type) params.type = type;
             if (tier) params.tier = tier;
 
             const response = await makeWargamingRequest<
@@ -78,6 +79,14 @@ export function registerVehicleTools(server: McpServer): void {
                     tank_id: parseInt(tank_id),
                 })
             );
+
+            // Filter by type client-side (see note above)
+            if (type) {
+                const wanted = type.toLowerCase();
+                vehicles = vehicles.filter(
+                    (vehicle) => vehicle.type?.toLowerCase() === wanted
+                );
+            }
 
             // Filter by name if provided
             if (name) {
@@ -222,6 +231,17 @@ ${tankData.description || "No description available"}
         }
     );
 
+    // The console API has no standalone /encyclopedia/guns|engines|.../
+    // methods (those are PC-only) — everything lives under /modules/ with
+    // its own type naming.
+    const MODULE_TYPE_MAP = {
+        guns: "vehicleGun",
+        engines: "vehicleEngine",
+        radios: "vehicleRadio",
+        suspensions: "vehicleChassis",
+        turrets: "vehicleTurret",
+    } as const;
+
     // Tool: Get tank modules (guns, engines, etc.)
     server.tool(
         "get-tank-modules",
@@ -245,13 +265,15 @@ ${tankData.description || "No description available"}
                 .describe("Filter by tier (1-10)"),
         },
         async ({ platform, module_type, nation, tier }) => {
-            const params: Record<string, string | number> = {};
+            const params: Record<string, string | number> = {
+                type: MODULE_TYPE_MAP[module_type],
+            };
             if (nation) params.nation = nation;
             if (tier) params.tier = tier;
 
             const response = await makeWargamingRequest<
                 WargamingResponse<{ [key: string]: VehicleModule }>
-            >(platform, `/wotx/encyclopedia/${module_type}/`, params);
+            >(platform, "/wotx/encyclopedia/modules/", params);
 
             if (!response || response.status === "error") {
                 return {
@@ -297,15 +319,12 @@ ${tankData.description || "No description available"}
                         // Limit to 10 per tier
                         resultText += `• ${
                             module.name
-                        } (${module.nation.toUpperCase()})\n`;
+                        } (${module.nation.toUpperCase()}, ID: ${
+                            module.module_id
+                        })\n`;
                         resultText += `  Credit Price: ${formatNumber(
                             module.price_credit
-                        )}\n`;
-                        if (module.price_gold > 0) {
-                            resultText += `  Gold Price: ${formatNumber(
-                                module.price_gold
-                            )}\n`;
-                        }
+                        )} | Weight: ${formatNumber(module.weight)}kg\n`;
                     });
                     resultText += "\n";
                 }

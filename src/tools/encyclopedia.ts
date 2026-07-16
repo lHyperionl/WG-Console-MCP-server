@@ -4,6 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { makeWargamingRequest } from "../api.js";
 import { formatPrice } from "../format.js";
+import { findTanksByName } from "../encyclopedia-cache.js";
 import type { WargamingResponse } from "../types.js";
 
 export function registerEncyclopediaTools(server: McpServer): void {
@@ -51,8 +52,8 @@ export function registerEncyclopediaTools(server: McpServer): void {
             maps.slice(0, 20).forEach((map: any, i) => {
                 // Limit to first 20 maps
                 resultText += `${i + 1}. **${map.name_i18n || map.arena_id}**\n`;
-                if (map.description_i18n) {
-                    resultText += `   ${map.description_i18n}\n`;
+                if (map.description) {
+                    resultText += `   ${map.description}\n`;
                 }
             });
 
@@ -211,8 +212,17 @@ export function registerEncyclopediaTools(server: McpServer): void {
                 .describe("Maximum number of results"),
         },
         async ({ platform, type, nation, tier, limit = 50 }) => {
+            // The console API names module types vehicleGun, vehicleEngine,
+            // etc. — the documented "gun"/"engine" values return INVALID_TYPE
+            const API_MODULE_TYPES: Record<string, string> = {
+                engine: "vehicleEngine",
+                gun: "vehicleGun",
+                radio: "vehicleRadio",
+                suspension: "vehicleChassis",
+                turret: "vehicleTurret",
+            };
             const params: Record<string, string | number> = { limit };
-            if (type) params.type = type;
+            if (type) params.type = API_MODULE_TYPES[type];
             if (nation) params.nation = nation;
             if (tier) params.tier = tier;
 
@@ -333,10 +343,11 @@ export function registerEncyclopediaTools(server: McpServer): void {
             const params: Record<string, string> = { language };
             if (role) params.role = role;
 
+            // The role tag is the data key (e.g. "commander") — entries
+            // themselves only carry name + skills
             const response = await makeWargamingRequest<
                 WargamingResponse<{
                     [key: string]: {
-                        role: string;
                         name: string;
                         skills: Record<string, any>;
                     };
@@ -372,8 +383,8 @@ export function registerEncyclopediaTools(server: McpServer): void {
 
             let resultText = `**Crew Roles Information**\n\n`;
 
-            crewRoles.forEach(([, roleData]) => {
-                resultText += `**${roleData.name}** (${roleData.role})\n`;
+            crewRoles.forEach(([roleTag, roleData]) => {
+                resultText += `**${roleData.name}** (${roleTag})\n`;
 
                 const skills = Object.entries(roleData.skills || {});
                 if (skills.length > 0) {
@@ -421,13 +432,18 @@ export function registerEncyclopediaTools(server: McpServer): void {
                 .describe("Localization language (en, ru, pl, de, fr, es, tr)"),
         },
         async ({ platform, language = "en" }) => {
+            // Console response has game_version, vehicle_nations,
+            // vehicle_types, and achievement_sections — no tanks_updated_at
+            // or vehicle_crew_roles like the PC API
             const response = await makeWargamingRequest<
                 WargamingResponse<{
                     game_version: string;
-                    tanks_updated_at: number;
-                    vehicle_crew_roles: Record<string, string>;
-                    vehicle_nations: Record<string, string>;
+                    vehicle_nations: Record<string, string | null>;
                     vehicle_types: Record<string, string>;
+                    achievement_sections: Record<
+                        string,
+                        { name: string; order: number }
+                    >;
                 }>
             >(platform, "/wotx/encyclopedia/info/", { language });
 
@@ -456,19 +472,14 @@ export function registerEncyclopediaTools(server: McpServer): void {
                 };
             }
 
-            const lastUpdate = new Date(
-                info.tanks_updated_at * 1000
-            ).toLocaleDateString();
-
             let resultText = `**Tankopedia Information**\n\n`;
-            resultText += `**Game Version:** ${info.game_version}\n`;
-            resultText += `**Last Updated:** ${lastUpdate}\n\n`;
+            resultText += `**Game Version:** ${info.game_version}\n\n`;
 
             if (info.vehicle_nations) {
                 const nations = Object.entries(info.vehicle_nations);
                 resultText += `**Available Nations (${nations.length}):**\n`;
                 nations.forEach(([nationKey, nationName]) => {
-                    resultText += `• ${nationName} (${nationKey})\n`;
+                    resultText += `• ${nationName || nationKey} (${nationKey})\n`;
                 });
                 resultText += `\n`;
             }
@@ -482,11 +493,13 @@ export function registerEncyclopediaTools(server: McpServer): void {
                 resultText += `\n`;
             }
 
-            if (info.vehicle_crew_roles) {
-                const roles = Object.entries(info.vehicle_crew_roles);
-                resultText += `**Crew Roles (${roles.length}):**\n`;
-                roles.forEach(([roleKey, roleName]) => {
-                    resultText += `• ${roleName} (${roleKey})\n`;
+            if (info.achievement_sections) {
+                const sections = Object.entries(info.achievement_sections).sort(
+                    ([, a], [, b]) => a.order - b.order
+                );
+                resultText += `**Achievement Sections (${sections.length}):**\n`;
+                sections.forEach(([sectionKey, section]) => {
+                    resultText += `• ${section.name} (${sectionKey})\n`;
                 });
             }
 
@@ -502,37 +515,102 @@ export function registerEncyclopediaTools(server: McpServer): void {
     );
 
     // Tool: Get vehicle upgrades (equipment and consumables)
+    // The console API returns upgrades per vehicle — tank_id is required.
     server.tool(
         "get-vehicle-upgrades",
-        "Get information about equipment and consumables",
+        "Get the equipment and consumables available for a specific vehicle. You can specify either tank_id OR tank_name.",
         {
             platform: z
                 .enum(["xbox", "ps4"])
                 .describe("Gaming platform (xbox or ps4)"),
-            type: z
-                .enum(["equipment", "consumable"])
+            tank_id: z
+                .number()
                 .optional()
-                .describe("Filter by upgrade type: equipment or consumable"),
+                .describe(
+                    "Vehicle ID to get upgrades for (use either tank_id OR tank_name)"
+                ),
+            tank_name: z
+                .string()
+                .optional()
+                .describe(
+                    "Vehicle name to search for (use either tank_id OR tank_name, e.g., 'IS-7')"
+                ),
+            type: z
+                .enum(["equipment", "consumables"])
+                .optional()
+                .describe("Filter by upgrade type: equipment or consumables"),
             language: z
                 .string()
                 .optional()
                 .default("en")
                 .describe("Localization language (en, ru, pl, de, fr, es, tr)"),
         },
-        async ({ platform, type, language = "en" }) => {
-            const params: Record<string, string> = { language };
+        async ({ platform, tank_id, tank_name, type, language = "en" }) => {
+            if (!tank_id && !tank_name) {
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: "❌ Error: You must specify either tank_id or tank_name — the Wargaming API returns upgrades per vehicle",
+                        },
+                    ],
+                };
+            }
+
+            let actualTankId = tank_id;
+            let tankLabelText = tank_id ? `Tank ID ${tank_id}` : tank_name!;
+
+            if (tank_name && !tank_id) {
+                const matches = await findTanksByName(platform, tank_name);
+                if (matches.length === 0) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: `❌ No tank found matching "${tank_name}" on ${platform.toUpperCase()}`,
+                            },
+                        ],
+                    };
+                }
+                if (matches.length > 1) {
+                    const tankList = matches
+                        .slice(0, 5)
+                        .map(
+                            (v) => `• ${v.name} (ID: ${v.tank_id}, Tier ${v.tier})`
+                        )
+                        .join("\n");
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: `❌ Multiple tanks found matching "${tank_name}". Please be more specific or use tank_id instead:\n\n${tankList}${
+                                    matches.length > 5 ? "\n... and more" : ""
+                                }`,
+                            },
+                        ],
+                    };
+                }
+                actualTankId = matches[0].tank_id;
+                tankLabelText = matches[0].name;
+            }
+
+            const params: Record<string, string | number> = {
+                tank_id: actualTankId!,
+                language,
+            };
             if (type) params.type = type;
 
+            interface UpgradeItem {
+                name: string;
+                description: string;
+                price_credit: number;
+                price_gold: number;
+            }
             const response = await makeWargamingRequest<
                 WargamingResponse<{
                     [key: string]: {
-                        description: string;
-                        image: string;
-                        name: string;
-                        price_credit: number;
-                        price_gold: number;
-                        type: string;
-                        weight: number;
+                        equipment?: Record<string, UpgradeItem>;
+                        consumables?: Record<string, UpgradeItem>;
                     };
                 }>
             >(platform, "/wotx/encyclopedia/vehicleupgrades/", params);
@@ -550,62 +628,55 @@ export function registerEncyclopediaTools(server: McpServer): void {
                 };
             }
 
-            const upgrades = Object.entries(response.data || {});
-            if (upgrades.length === 0) {
+            const tankUpgrades = response.data?.[actualTankId!.toString()];
+            if (!tankUpgrades) {
                 return {
                     content: [
                         {
                             type: "text",
-                            text: `No ${type || "upgrades"} found`,
+                            text: `No upgrade data found for ${tankLabelText}`,
                         },
                     ],
                 };
             }
 
-            let resultText = `**Vehicle ${
-                type
-                    ? type.charAt(0).toUpperCase() + type.slice(1) + "s"
-                    : "Upgrades"
-            } (${upgrades.length} found)**\n\n`;
+            // Descriptions embed color markup like $(col:aeff01)...$(col:end)
+            const cleanText = (text: string) =>
+                text.replace(/\$\(col:[^)]*\)/g, "").replace(/\n+/g, " — ");
 
-            // Group by type
-            const upgradesByType = upgrades.reduce((acc, [id, upgrade]) => {
-                const upgradeType = upgrade.type || "Other";
-                if (!acc[upgradeType]) acc[upgradeType] = [];
-                acc[upgradeType].push({ id, ...upgrade });
-                return acc;
-            }, {} as Record<string, Array<any>>);
+            let resultText = `**Vehicle Upgrades for ${tankLabelText} (Tank ID: ${actualTankId})**\n\n`;
 
-            Object.entries(upgradesByType).forEach(
-                ([upgradeType, typeUpgrades]) => {
-                    resultText += `**${upgradeType.toUpperCase()}:**\n`;
+            const sections: Array<
+                [string, Record<string, UpgradeItem> | undefined]
+            > = [
+                ["Equipment", tankUpgrades.equipment],
+                ["Consumables", tankUpgrades.consumables],
+            ];
 
-                    typeUpgrades.slice(0, 10).forEach((upgrade) => {
-                        resultText += `• **${upgrade.name}**\n`;
-                        if (upgrade.description) {
-                            resultText += `  ${upgrade.description}\n`;
-                        }
-                        resultText += `  Credit Price: ${formatPrice(
-                            upgrade.price_credit
+            for (const [sectionName, items] of sections) {
+                if (!items) continue;
+                const entries = Object.values(items);
+                resultText += `**${sectionName} (${entries.length}):**\n`;
+                entries.forEach((upgrade) => {
+                    resultText += `• **${upgrade.name}**`;
+                    resultText += ` — Credits: ${formatPrice(
+                        upgrade.price_credit
+                    )}`;
+                    if (upgrade.price_gold > 0) {
+                        resultText += ` | Gold: ${formatPrice(
+                            upgrade.price_gold
                         )}`;
-                        if (upgrade.price_gold > 0) {
-                            resultText += ` | Gold Price: ${formatPrice(
-                                upgrade.price_gold
-                            )}`;
-                        }
-                        if (upgrade.weight > 0) {
-                            resultText += ` | Weight: ${upgrade.weight}kg`;
-                        }
-                        resultText += `\n\n`;
-                    });
-
-                    if (typeUpgrades.length > 10) {
-                        resultText += `... and ${
-                            typeUpgrades.length - 10
-                        } more ${upgradeType.toLowerCase()}s\n\n`;
                     }
-                }
-            );
+                    resultText += `\n`;
+                    if (
+                        upgrade.description &&
+                        upgrade.description !== upgrade.name
+                    ) {
+                        resultText += `  ${cleanText(upgrade.description)}\n`;
+                    }
+                });
+                resultText += `\n`;
+            }
 
             return {
                 content: [

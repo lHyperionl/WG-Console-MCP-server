@@ -4,12 +4,18 @@
         "description": "Player-specific vehicle statistics and performance data endpoints for World of Tanks Console API",
         "base_url": "https://api-modernarmor.worldoftanks.com",
         "endpoints_count": 2,
-        "note": "These endpoints provide detailed statistics about individual player vehicle performance, achievements, and battle history"
+        "note": "These endpoints provide detailed statistics about individual player vehicle performance, achievements, and battle history",
+        "live_discrepancies_note": "IMPORTANT: unlike the PC API, the console API has NO /wotx/account/tanks/ method (it returns METHOD_NOT_FOUND) — /wotx/tanks/stats/ is the only source of per-vehicle player statistics. Live behavior verified 2026-07-16."
     },
     "player_vehicle_stats": {
         "endpoint": "/wotx/tanks/stats/",
         "url": "https://api-modernarmor.worldoftanks.com/wotx/tanks/stats/?application_id=c6e18375d788f29b4c118307af227b93",
         "description": "Returns overall statistics, Tank Company statistics, and clan statistics per each vehicle for each user.",
+        "live_discrepancies": [
+            "Without an access_token, 'company', 'in_garage', 'frags' (the per-tank frag breakdown), and 'in_garage_updated' come back as null — handle nulls before dereferencing.",
+            "The 'in_garage' filter parameter is silently IGNORED without a valid access_token (no error; all vehicles are returned).",
+            "Field placement matters: max_frags, max_xp, and mark_of_mastery are TOP-level fields of each entry, while max_damage is inside 'all' (as documented in the response schema below, but easy to get wrong)."
+        ],
         "parameters": {
             "application_id": {
                 "type": "string",
@@ -119,6 +125,9 @@
     "player_vehicle_achievements": {
         "endpoint": "/wotx/tanks/achievements/",
         "url": "https://api-modernarmor.worldoftanks.com/wotx/tanks/achievements/?application_id=c6e18375d788f29b4c118307af227b93",
+        "live_discrepancies": [
+            "The 'in_garage' filter parameter is silently IGNORED without a valid access_token (no error; all vehicles are returned)."
+        ],
         "description": "Returns players' achievement details. Achievement properties define the achievements field values: 1-4 for Mastery Badges and Stage Achievements (type: 'class'); maximum value of Achievement series (type: 'series'); number of achievements earned from sections: Battle Hero, Epic Achievements, Group Achievements, Special Achievements, etc. (type: 'repeatable, single, custom').",
         "parameters": {
             "application_id": {

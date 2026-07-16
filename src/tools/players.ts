@@ -126,6 +126,17 @@ export function registerPlayerTools(server: McpServer): void {
 
             const stats = playerData.statistics.all;
             const winRate = percent(stats.wins, stats.battles);
+            // The API only returns lifetime totals — derive the averages
+            const draws = Math.max(
+                0,
+                stats.battles - stats.wins - stats.losses
+            );
+            const avgDamage =
+                stats.battles > 0
+                    ? Math.round(stats.damage_dealt / stats.battles)
+                    : 0;
+            const avgXp =
+                stats.battles > 0 ? Math.round(stats.xp / stats.battles) : 0;
 
             const statsText = `
 **Player Statistics (ID: ${account_id})**
@@ -134,15 +145,15 @@ export function registerPlayerTools(server: McpServer): void {
 • Battles: ${formatNumber(stats.battles)}
 • Wins: ${formatNumber(stats.wins)} (${winRate}%)
 • Losses: ${formatNumber(stats.losses)}
-• Draws: ${formatNumber(stats.draws)}
+• Draws: ${formatNumber(draws)}
 
 **Combat Performance:**
-• Average Damage: ${formatNumber(stats.avg_damage)}
+• Average Damage: ${formatNumber(avgDamage)}
 • Total Damage Dealt: ${formatNumber(stats.damage_dealt)}
 • Total Damage Received: ${formatNumber(stats.damage_received)}
 • Frags (Kills): ${formatNumber(stats.frags)}
-• Spots: ${formatNumber(stats.spots)}
-• Average XP: ${formatNumber(stats.avg_xp)}
+• Spots: ${formatNumber(stats.spotted)}
+• Average XP: ${formatNumber(avgXp)}
     `.trim();
 
             return {
@@ -277,7 +288,7 @@ ${
             const [response, { vehicles }] = await Promise.all([
                 makeWargamingRequest<
                     WargamingResponse<{ [key: string]: PlayerVehicleStats[] }>
-                >(platform, "/wotx/account/tanks/", params),
+                >(platform, "/wotx/tanks/stats/", params),
                 getVehicleMap(platform),
             ]);
 
@@ -314,23 +325,27 @@ ${
                     (v) => v.tank_id === tank_id
                 );
                 if (tankStats) {
-                    const stats = tankStats.statistics.all;
+                    const stats = tankStats.all;
                     const winRate = percent(stats.wins, stats.battles);
+                    const avgDamage =
+                        stats.battles > 0
+                            ? Math.round(stats.damage_dealt / stats.battles)
+                            : 0;
 
                     resultText += `**${tankLabel(vehicles, tank_id)}**\n`;
                     resultText += `• Battles: ${formatNumber(stats.battles)}\n`;
                     resultText += `• Win Rate: ${winRate}%\n`;
                     resultText += `• Average Damage: ${formatNumber(
-                        stats.avg_damage
+                        avgDamage
                     )}\n`;
                     resultText += `• Max Damage: ${formatNumber(
                         stats.max_damage
                     )}\n`;
                     resultText += `• Frags: ${formatNumber(stats.frags)}\n`;
                     resultText += `• Max Frags: ${formatNumber(
-                        stats.max_frags
+                        tankStats.max_frags
                     )}\n`;
-                    resultText += `• Mark of Mastery: ${stats.mark_of_mastery}\n`;
+                    resultText += `• Mark of Mastery: ${tankStats.mark_of_mastery}\n`;
                 } else {
                     resultText += `No statistics found for tank ID ${tank_id}`;
                 }
@@ -341,14 +356,12 @@ ${
 
                 const topVehicles = playerVehicles
                     .sort(
-                        (a, b) =>
-                            (b.statistics.all.battles || 0) -
-                            (a.statistics.all.battles || 0)
+                        (a, b) => (b.all.battles || 0) - (a.all.battles || 0)
                     )
                     .slice(0, 10);
 
                 topVehicles.forEach((vehicle, i) => {
-                    const stats = vehicle.statistics.all;
+                    const stats = vehicle.all;
                     const winRate = percent(stats.wins, stats.battles, 1);
                     resultText += `${i + 1}. ${tankLabel(
                         vehicles,
@@ -387,7 +400,7 @@ ${
                 .enum(["0", "1"])
                 .optional()
                 .describe(
-                    "Filter by garage status: 1 = in garage, 0 = not in garage"
+                    "Filter by garage status: 1 = in garage, 0 = not in garage. Note: the API only honors this filter with a valid access_token; without one it is ignored"
                 ),
         },
         async ({ platform, account_id, tank_id, in_garage }) => {
@@ -397,34 +410,7 @@ ${
 
             const [response, { vehicles }] = await Promise.all([
                 makeWargamingRequest<
-                    WargamingResponse<{
-                        [key: string]: Array<{
-                            account_id: number;
-                            tank_id: number;
-                            mark_of_mastery: number;
-                            in_garage: boolean;
-                            all: {
-                                battles: number;
-                                wins: number;
-                                losses: number;
-                                damage_dealt: number;
-                                damage_received: number;
-                                frags: number;
-                                spotted: number;
-                                survived_battles: number;
-                                xp: number;
-                                max_damage: number;
-                                max_frags: number;
-                                max_xp: number;
-                            };
-                            company: {
-                                battles: number;
-                                wins: number;
-                                damage_dealt: number;
-                                frags: number;
-                            };
-                        }>;
-                    }>
+                    WargamingResponse<{ [key: string]: PlayerVehicleStats[] }>
                 >(platform, "/wotx/tanks/stats/", params),
                 getVehicleMap(platform),
             ]);
@@ -473,8 +459,12 @@ ${
                             ? (stats.damage_dealt / stats.battles).toFixed(0)
                             : "0";
 
-                    resultText += `**${tankLabel(vehicles, tank_id)}** ${
-                        tankStats.in_garage ? "(In Garage)" : "(Not in Garage)"
+                    resultText += `**${tankLabel(vehicles, tank_id)}**${
+                        tankStats.in_garage === null
+                            ? ""
+                            : tankStats.in_garage
+                            ? " (In Garage)"
+                            : " (Not in Garage)"
                     }\n\n`;
                     resultText += `**Performance Metrics:**\n`;
                     resultText += `• Battles: ${stats.battles.toLocaleString()}\n`;
@@ -483,12 +473,13 @@ ${
                     resultText += `• Average Damage: ${avgDamage}\n`;
                     resultText += `• Max Damage: ${stats.max_damage.toLocaleString()}\n`;
                     resultText += `• Total Frags: ${stats.frags.toLocaleString()}\n`;
-                    resultText += `• Max Frags: ${stats.max_frags}\n`;
+                    resultText += `• Max Frags: ${tankStats.max_frags}\n`;
                     resultText += `• Mark of Mastery: ${tankStats.mark_of_mastery}\n`;
                     resultText += `• Total XP: ${stats.xp.toLocaleString()}\n`;
-                    resultText += `• Max XP: ${stats.max_xp}\n`;
+                    resultText += `• Max XP: ${tankStats.max_xp}\n`;
 
-                    if (tankStats.company.battles > 0) {
+                    // company is null unless the request carried an access_token
+                    if (tankStats.company && tankStats.company.battles > 0) {
                         const companyWinRate = percent(
                             tankStats.company.wins,
                             tankStats.company.battles
@@ -504,16 +495,25 @@ ${
             } else {
                 // Show summary of all vehicles
                 const totalVehicles = vehicleData.length;
+                // in_garage is null unless the request carried an access_token
+                const garageKnown = vehicleData.some(
+                    (v) => v.in_garage !== null
+                );
                 const inGarageCount = vehicleData.filter(
                     (v) => v.in_garage
                 ).length;
 
                 resultText += `**Vehicle Summary:**\n`;
                 resultText += `• Total Vehicles: ${totalVehicles}\n`;
-                resultText += `• In Garage: ${inGarageCount}\n`;
-                resultText += `• Not in Garage: ${
-                    totalVehicles - inGarageCount
-                }\n\n`;
+                if (garageKnown) {
+                    resultText += `• In Garage: ${inGarageCount}\n`;
+                    resultText += `• Not in Garage: ${
+                        totalVehicles - inGarageCount
+                    }\n`;
+                } else {
+                    resultText += `• Garage status: unavailable (requires access_token)\n`;
+                }
+                resultText += `\n`;
 
                 // Top vehicles by battles
                 const topVehicles = vehicleData
@@ -524,11 +524,16 @@ ${
                 topVehicles.forEach((vehicle, i) => {
                     const stats = vehicle.all;
                     const winRate = percent(stats.wins, stats.battles, 1);
-                    const garageStatus = vehicle.in_garage ? "🏠" : "❌";
+                    const garageStatus =
+                        vehicle.in_garage === null
+                            ? ""
+                            : vehicle.in_garage
+                            ? " 🏠"
+                            : " ❌";
                     resultText += `${i + 1}. ${tankLabel(
                         vehicles,
                         vehicle.tank_id
-                    )} ${garageStatus}: ${stats.battles.toLocaleString()} battles, ${winRate}% WR, MoE: ${
+                    )}${garageStatus}: ${stats.battles.toLocaleString()} battles, ${winRate}% WR, MoE: ${
                         vehicle.mark_of_mastery
                     }\n`;
                 });
@@ -564,7 +569,7 @@ ${
                 .enum(["0", "1"])
                 .optional()
                 .describe(
-                    "Filter by garage status: 1 = in garage, 0 = not in garage"
+                    "Filter by garage status: 1 = in garage, 0 = not in garage. Note: the API only honors this filter with a valid access_token; without one it is ignored"
                 ),
         },
         async ({ platform, account_id, tank_id, in_garage }) => {

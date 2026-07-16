@@ -129,7 +129,7 @@ export function registerReportTools(server: McpServer): void {
                         WargamingResponse<{
                             [key: string]: PlayerVehicleStats[];
                         }>
-                    >(platform, "/wotx/account/tanks/", {
+                    >(platform, "/wotx/tanks/stats/", {
                         account_id: accountId,
                     }),
                     makeWargamingRequest<
@@ -151,7 +151,7 @@ export function registerReportTools(server: McpServer): void {
                 const tanks: Record<string, TankSnapshot> = {};
                 for (const tank of tanksRes?.data?.[accountId.toString()] ||
                     []) {
-                    const s = tank.statistics.all;
+                    const s = tank.all;
                     tanks[tank.tank_id.toString()] = {
                         battles: s.battles || 0,
                         wins: s.wins || 0,
@@ -167,7 +167,7 @@ export function registerReportTools(server: McpServer): void {
                         damage_dealt: snapshotStats.damage_dealt || 0,
                         damage_received: snapshotStats.damage_received || 0,
                         frags: snapshotStats.frags || 0,
-                        spots: snapshotStats.spots || 0,
+                        spots: snapshotStats.spotted || 0,
                         survived_battles: snapshotStats.survived_battles,
                         xp: snapshotStats.xp,
                     },
@@ -244,14 +244,12 @@ export function registerReportTools(server: McpServer): void {
                 report += `**Vehicles Played:** ${playerTanks.length}\n\n`;
 
                 const byBattles = [...playerTanks].sort(
-                    (a, b) =>
-                        (b.statistics.all.battles || 0) -
-                        (a.statistics.all.battles || 0)
+                    (a, b) => (b.all.battles || 0) - (a.all.battles || 0)
                 );
 
                 report += `**Top 5 Tanks by Battles:**\n`;
                 byBattles.slice(0, 5).forEach((tank, i) => {
-                    const s = tank.statistics.all;
+                    const s = tank.all;
                     report += `${i + 1}. ${tankLabel(
                         vehicles,
                         tank.tank_id
@@ -263,17 +261,17 @@ export function registerReportTools(server: McpServer): void {
                 });
 
                 const experienced = byBattles.filter(
-                    (t) => t.statistics.all.battles >= 20
+                    (t) => t.all.battles >= 20
                 );
                 if (experienced.length > 0) {
                     const bestByWinRate = [...experienced].sort(
                         (a, b) =>
-                            b.statistics.all.wins / b.statistics.all.battles -
-                            a.statistics.all.wins / a.statistics.all.battles
+                            b.all.wins / b.all.battles -
+                            a.all.wins / a.all.battles
                     );
                     report += `\n**Best Performers (min. 20 battles):**\n`;
                     bestByWinRate.slice(0, 3).forEach((tank, i) => {
-                        const s = tank.statistics.all;
+                        const s = tank.all;
                         report += `${i + 1}. ${tankLabel(
                             vehicles,
                             tank.tank_id
@@ -519,14 +517,14 @@ export function registerReportTools(server: McpServer): void {
                         WargamingResponse<{
                             [key: string]: PlayerVehicleStats[];
                         }>
-                    >(platform, "/wotx/account/tanks/", {
+                    >(platform, "/wotx/tanks/stats/", {
                         account_id: playerA.account_id,
                     }),
                     makeWargamingRequest<
                         WargamingResponse<{
                             [key: string]: PlayerVehicleStats[];
                         }>
-                    >(platform, "/wotx/account/tanks/", {
+                    >(platform, "/wotx/tanks/stats/", {
                         account_id: playerB.account_id,
                     }),
                     getVehicleMap(platform),
@@ -576,24 +574,24 @@ export function registerReportTools(server: McpServer): void {
             ): PlayerVehicleStats[] => res?.data?.[accountId.toString()] || [];
             const mostPlayed = (tanks: PlayerVehicleStats[]) => {
                 const top = [...tanks].sort(
-                    (a, b) => b.statistics.all.battles - a.statistics.all.battles
+                    (a, b) => b.all.battles - a.all.battles
                 )[0];
                 if (!top) return "—";
-                const s = top.statistics.all;
+                const s = top.all;
                 return `${tankLabel(vehicles, top.tank_id)} (${formatNumber(
                     s.battles
                 )} battles, ${percent(s.wins, s.battles, 1)}% WR)`;
             };
             const bestPerformer = (tanks: PlayerVehicleStats[]) => {
                 const top = tanks
-                    .filter((t) => t.statistics.all.battles >= 20)
+                    .filter((t) => t.all.battles >= 20)
                     .sort(
                         (a, b) =>
-                            b.statistics.all.wins / b.statistics.all.battles -
-                            a.statistics.all.wins / a.statistics.all.battles
+                            b.all.wins / b.all.battles -
+                            a.all.wins / a.all.battles
                     )[0];
                 if (!top) return "—";
-                const s = top.statistics.all;
+                const s = top.all;
                 return `${tankLabel(vehicles, top.tank_id)} (${percent(
                     s.wins,
                     s.battles,
@@ -633,8 +631,8 @@ export function registerReportTools(server: McpServer): void {
                 ],
                 [
                     "Spots per battle",
-                    perBattle(statsA.spots, statsA),
-                    perBattle(statsB.spots, statsB),
+                    perBattle(statsA.spotted, statsA),
+                    perBattle(statsB.spotted, statsB),
                 ],
                 [
                     "Vehicles played",

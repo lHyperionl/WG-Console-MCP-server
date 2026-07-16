@@ -4,12 +4,17 @@
         "description": "Game encyclopedia data endpoints for World of Tanks Console API",
         "base_url": "https://api-modernarmor.worldoftanks.com",
         "endpoints_count": 9,
-        "note": "These endpoints provide access to game encyclopedia data including vehicles, achievements, maps, modules, and crew information"
+        "note": "These endpoints provide access to game encyclopedia data including vehicles, achievements, maps, modules, and crew information",
+        "live_discrepancies_note": "The live console API deviates from the official docs in several places. Endpoints below carry a 'live_discrepancies' field where behavior was verified to differ (verified 2026-07-16). Also note: the PC-style module methods /wotx/encyclopedia/guns|engines|radios|suspensions|turrets/ do NOT exist on the console API (METHOD_NOT_FOUND) — use /wotx/encyclopedia/modules/ with its type parameter instead."
     },
     "encyclopedia_vehicles": {
         "endpoint": "/wotx/encyclopedia/vehicles/",
         "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/vehicles/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
         "description": "Returns list of available vehicles.",
+        "live_discrepancies": [
+            "A 'type' filter parameter is NOT supported — it is silently ignored (all vehicles are returned, no error). Filter by vehicle type client-side.",
+            "When page_no is omitted, the API returns ALL vehicles (~1273) in one response despite meta.limit reporting 100; pagination only kicks in when page_no is passed explicitly."
+        ],
         "parameters": {
             "application_id": {
                 "type": "string",
@@ -168,6 +173,12 @@
         "endpoint": "/wotx/encyclopedia/modules/",
         "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/modules/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
         "description": "Returns list of available modules that can be installed on vehicles (engines, guns, radios, suspensions, turrets).",
+        "live_discrepancies": [
+            "The 'type' parameter's actual valid values are: vehicleGun, vehicleEngine, vehicleRadio, vehicleChassis, vehicleTurret. The documented values (engine, gun, radio, suspension, turret) return INVALID_TYPE (407).",
+            "Undocumented 'nation' and 'tier' filter parameters ARE supported and work.",
+            "Response entries have no price_xp or price_gold field; actual fields are module_id, name, nation, tier, type, weight, price_credit, image, tanks (list of tank_ids the module fits), era.",
+            "When page_no is omitted, all matching modules (~6500 unfiltered) are returned in one response."
+        ],
         "parameters": {
             "application_id": {
                 "type": "string",
@@ -217,6 +228,10 @@
         "endpoint": "/wotx/encyclopedia/crewroles/",
         "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/crewroles/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
         "description": "Returns information about crew roles.",
+        "live_discrepancies": [
+            "Only one role exists on console ('commander'). The role tag is the data KEY — entries contain only 'name' and 'skills', there is no 'role' field inside the entry.",
+            "Each skill entry has is_perk (boolean), name, description, and images.large — richer than the documented 'associative array'."
+        ],
         "parameters": {
             "application_id": {
                 "type": "string",
@@ -251,6 +266,10 @@
         "endpoint": "/wotx/encyclopedia/info/",
         "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/info/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
         "description": "Returns general information about the Tankopedia.",
+        "live_discrepancies": [
+            "Actual response fields are: game_version, vehicle_nations, vehicle_types, achievement_sections (each section: {name, order}). The documented tanks_updated_at and vehicle_crew_roles fields do NOT exist — requesting them via 'fields' returns INVALID_FIELDS (407).",
+            "Some vehicle_nations values can be null (e.g. 'xn', 'switzerland') — fall back to the nation key for display."
+        ],
         "parameters": {
             "application_id": {
                 "type": "string",
@@ -282,6 +301,12 @@
         "endpoint": "/wotx/encyclopedia/vehicleupgrades/",
         "url": "https://api-modernarmor.worldoftanks.com/wotx/encyclopedia/vehicleupgrades/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
         "description": "Returns list of equipment and consumables.",
+        "live_discrepancies": [
+            "'tank_id' is REQUIRED (undocumented) — omitting it returns TANK_ID_NOT_SPECIFIED (402). Upgrades are returned per vehicle.",
+            "Response is keyed by tank_id, each entry containing 'equipment' and 'consumables' dicts keyed by equipment_id. Item fields: equipment_id, name, description, price_credit, price_gold, image (may be null).",
+            "The 'type' filter accepts 'equipment' or 'consumables' (plural, as documented).",
+            "Consumable descriptions embed color markup like $(col:aeff01)...$(col:end) — strip it for display."
+        ],
         "parameters": {
             "application_id": {
                 "type": "string",

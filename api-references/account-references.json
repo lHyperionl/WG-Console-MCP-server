@@ -4,7 +4,8 @@
         "description": "Player account related endpoints for World of Tanks Console API",
         "base_url": "https://api-modernarmor.worldoftanks.com",
         "endpoints_count": 5,
-        "note": "These endpoints provide access to player account information, achievements, and platform-specific data"
+        "note": "These endpoints provide access to player account information, achievements, and platform-specific data",
+        "live_discrepancies_note": "Unlike the PC API, there is NO /wotx/account/tanks/ method on the console API (returns METHOD_NOT_FOUND) — use /wotx/tanks/stats/ for per-vehicle player statistics. Live behavior verified 2026-07-16."
     },
     "players": {
         "endpoint": "/wotx/account/list/",
@@ -70,6 +71,10 @@
         "endpoint": "/wotx/account/info/",
         "url": "https://api-modernarmor.worldoftanks.com/wotx/account/info/?application_id=a7734243d7c7bc1450bd07395f3a77e3",
         "description": "Returns player details.",
+        "live_discrepancies": [
+            "statistics.all contains lifetime totals ONLY — there are no draws, avg_damage, avg_xp, or win_ratio fields; derive them client-side (draws = battles - wins - losses). The spotting counter is named 'spotted', not 'spots'.",
+            "Without an access_token, 'private', 'statistics.company', and 'statistics.frags' come back as null."
+        ],
         "parameters": {
             "application_id": {
                 "type": "string",

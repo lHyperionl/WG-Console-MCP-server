@@ -15,6 +15,8 @@ export interface PlayerInfo {
     account_id: number;
 }
 
+// /wotx/account/info/ — note the API returns lifetime totals only;
+// averages (damage, XP) and draws must be derived client-side.
 export interface PlayerStats {
     account_id: number;
     nickname?: string;
@@ -25,16 +27,16 @@ export interface PlayerStats {
             battles: number;
             wins: number;
             losses: number;
-            draws: number;
             damage_dealt: number;
             damage_received: number;
             frags: number;
-            spots: number;
-            avg_damage: number;
-            avg_xp: number;
-            win_ratio: number;
-            xp?: number;
-            survived_battles?: number;
+            spotted: number;
+            hits: number;
+            shots: number;
+            capture_points: number;
+            dropped_capture_points: number;
+            survived_battles: number;
+            xp: number;
         };
     };
 }
@@ -75,38 +77,48 @@ export interface ClanDetails extends ClanInfo {
     motto?: string;
 }
 
-export interface PlayerVehicleStats {
-    tank_id: number;
-    statistics: {
-        all: {
-            battles: number;
-            wins: number;
-            losses: number;
-            draws: number;
-            damage_dealt: number;
-            damage_received: number;
-            frags: number;
-            spots: number;
-            avg_damage: number;
-            avg_xp: number;
-            win_ratio: number;
-            max_frags: number;
-            max_xp: number;
-            max_damage: number;
-            mark_of_mastery: number;
-        };
-    };
+// One entry from /wotx/tanks/stats/ — per-vehicle lifetime statistics.
+// max_frags, max_xp, and mark_of_mastery live at the TOP level (not inside
+// `all`); `company` and `in_garage` are null unless an access_token is sent.
+export interface PlayerVehicleTotals {
+    battles: number;
+    wins: number;
+    losses: number;
+    damage_dealt: number;
+    damage_received: number;
+    frags: number;
+    spotted: number;
+    survived_battles: number;
+    xp: number;
+    max_damage: number;
+    shots: number;
+    hits: number;
 }
 
+export interface PlayerVehicleStats {
+    account_id: number;
+    tank_id: number;
+    mark_of_mastery: number;
+    max_frags: number;
+    max_xp: number;
+    in_garage: boolean | null;
+    last_battle_time: number | null;
+    all: PlayerVehicleTotals;
+    company: PlayerVehicleTotals | null;
+}
+
+// One entry from /wotx/encyclopedia/modules/ — the console API has no
+// price_gold/price_xp on modules, and no standalone guns/engines/etc. methods.
 export interface VehicleModule {
     module_id: number;
     name: string;
     type: string;
     tier: number;
     nation: string;
-    image: string;
-    price_gold: number;
+    image: string | null;
     price_credit: number;
+    weight: number;
+    tanks?: number[];
 }
 
 export interface TankDetails extends VehicleInfo {

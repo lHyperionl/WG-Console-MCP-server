@@ -45,12 +45,13 @@
                 "encyclopedia_vehicles",
                 "encyclopedia_achievements",
                 "encyclopedia_maps",
-                "encyclopedia_engines",
-                "encyclopedia_guns",
-                "encyclopedia_radios",
-                "encyclopedia_suspensions",
-                "encyclopedia_turrets"
-            ]
+                "encyclopedia_modules",
+                "encyclopedia_crew_roles",
+                "encyclopedia_info",
+                "encyclopedia_vehicle_upgrades",
+                "encyclopedia_vehicle_characteristics"
+            ],
+            "live_note": "The console API has no standalone guns/engines/radios/suspensions/turrets methods (PC-only; METHOD_NOT_FOUND) — all module data comes from encyclopedia_modules. See live_discrepancies fields inside the reference files for other verified deviations from the official docs."
         },
         "player_vehicles": {
             "file": "player-vehicles-references.json",

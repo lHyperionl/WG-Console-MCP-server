@@ -41,7 +41,7 @@ async function fetchCurrentSnapshot(
         ),
         makeWargamingRequest<
             WargamingResponse<{ [key: string]: PlayerVehicleStats[] }>
-        >(platform, "/wotx/account/tanks/", { account_id: accountId }),
+        >(platform, "/wotx/tanks/stats/", { account_id: accountId }),
     ]);
 
     const stats = statsRes?.data?.[accountId.toString()]?.statistics?.all;
@@ -59,14 +59,14 @@ async function fetchCurrentSnapshot(
         damage_dealt: stats.damage_dealt || 0,
         damage_received: stats.damage_received || 0,
         frags: stats.frags || 0,
-        spots: stats.spots || 0,
+        spots: stats.spotted || 0,
         survived_battles: stats.survived_battles,
         xp: stats.xp,
     };
 
     const tanks: Record<string, TankSnapshot> = {};
     for (const tank of tanksRes?.data?.[accountId.toString()] || []) {
-        const s = tank.statistics.all;
+        const s = tank.all;
         tanks[tank.tank_id.toString()] = {
             battles: s.battles || 0,
             wins: s.wins || 0,
